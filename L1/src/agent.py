@@ -67,8 +67,7 @@ class TrivialVacuumEnvironment:
             if self.status[agent.location] == "Dirty":
                 self.status[agent.location] = "Clean"
                 agent.performance += 10
-            else:
-                agent.performance -= 3 
+                agent.performance -= 3
         elif action == "Right":
             if agent.location == loc_A:
                 agent.location = loc_B
@@ -169,8 +168,7 @@ class TrivialVacuumEnvironment:
         >>> action = env.model_based_agent(agent)
         >>> assert action == 'Stay', f"agent should stay at B since both locations are clean, however your action is {action}"
         """
-        if agent.location not in agent.visited:
-            agent.visited[agent.location] = self.status[agent.location]
+        agent.visited[agent.location] = self.status[agent.location]
 
         if self.status[agent.location] == "Dirty":
             return "Suck"
