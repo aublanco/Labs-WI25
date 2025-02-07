@@ -61,12 +61,20 @@ def main(epsilon: float = 0.1, mode: str = "manual"):
 
         # AI mode action
         if mode == "AI":
-            # TODO: Implement the epsilon-greedy algorithm
-            # TODO:  Select a machine to play, save that to chosen_machine
 
-            # TODO: update the estimated rewards and play counts, update the estimated_reward for the chosen machine
+            chosen_machine = egreedy(estimated_rewards, epsilon)
+           
+            reward = 1 if np.random.rand() < true_rewards_probabilities[chosen_machine] else 0
 
-            # TODO: calculate the reward and update the total reward
+            current_play_count = play_counts[chosen_machine]
+            estimated_rewards[chosen_machine] = update(
+                estimated_rewards[chosen_machine],
+                reward,
+                current_play_count
+            )
+
+            play_counts[chosen_machine] += 1
+            total_reward += (reward - cost_per_play) 
 
             # Add a small delay to see the AI in action
             # Draw the selected machine's picture in AI mode
