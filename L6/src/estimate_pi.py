@@ -23,7 +23,28 @@ def estimate_pi(num_samples: int, step: int = 100):
     #     d. After every 'step' samples, compute the current estimate of Pi (4 * inside_count / total_samples)
     #        and append a tuple (x_inside.copy(), y_inside.copy(), x_outside.copy(), y_outside.copy(), pi_estimate) to data.
     # 3. Return the data list when complete.
-    pass
+    counter = 0 
+    x_inside = []
+    y_inside = []
+    x_outside = []
+    y_outside = []
+    data_list = []
+
+    for i in range(num_samples):
+        x = random.uniform(-1,1) 
+        y = random.uniform(-1,1)
+        if x ** 2 + y ** 2 <= 1:
+            counter += 1
+            x_inside.append(x)
+            y_inside.append(y)
+        else:
+            x_outside.append(x)
+            y_outside.append(y)
+        if (i + 1) % step == 0:
+            pi_estimate = 4 * counter / (i + 1)
+            data_list.append((x_inside.copy(), y_inside.copy(), x_outside.copy(), y_outside.copy(), pi_estimate))
+
+    return data_list
 
 def create_animation_pi(num_samples: int, step:int=100, filename: str='monte_carlo_pi.gif'):
     """
