@@ -81,8 +81,8 @@ class WindyCliffWorld(gym.Env):
         plt.imshow(grid, cmap='viridis')
         plt.axis('off')
         fig.canvas.draw()
-        plt.close(fig)
         image = np.array(fig.canvas.renderer.buffer_rgba())
+        plt.close(fig)
         return image
 
 # Create and register the environment
@@ -91,14 +91,48 @@ env = WindyCliffWorld()
 def q_learning(env, num_episodes, alpha, gamma, epsilon):
     q_table = np.zeros([env.observation_space.n, env.action_space.n])
 
-    # TODO: Implement Q-learning algorithm
+    for episode in range(num_episodes):
+        state = env.reset()
+        done = False
+
+        while not done:    
+            if np.random.rand() < epsilon:
+                action = env.action_space.sample()
+            else:
+                action = int(np.argmax(q_table[state]))
+
+            next_state, reward, done, _ = env.step(action)
+
+            best_action = np.max(q_table[state])
+            q_table[state, action] = q_table[state, action] + alpha * (reward + gamma * best_action - q_table[state, action])
+
+            state = next_state
     
     return q_table
 
 def sarsa(env, num_episodes, alpha, gamma, epsilon):
     q_table = np.zeros([env.observation_space.n, env.action_space.n])
 
-    # TODO: Implement SARSA algorithm
+    for episode in range(num_episodes):
+        state = env.reset()
+        done = False
+        if np.random.rand() < epsilon:
+            action = env.action_space.sample()
+        else:
+            action = int(np.argmax(q_table[state]))
+
+        while not done:
+            next_state, reward, done, _ = env.step(action)
+
+            if np.random.rand() < epsilon:
+                next_action = env.action_space.sample()
+            else:
+                next_action = int(np.argmax(q_table[state]))
+
+            q_table[state, action] = q_table[state, action] + alpha*(reward + gamma*q_table[next_state, next_action] - q_table[state,action])
+
+            state = next_state
+            action = next_action
     
     return q_table
 
@@ -118,7 +152,6 @@ def visualize_policy(env, q_table, filename='q_learning.gif'):
     save_gif(frames, filename=filename)
 
 # Example usage:
-
 # Testing Q-Learning
 env = WindyCliffWorld()
 q_table = q_learning(env, num_episodes=500, alpha=0.1, gamma=0.99, epsilon=0.1)
