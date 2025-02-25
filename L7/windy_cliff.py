@@ -81,8 +81,8 @@ class WindyCliffWorld(gym.Env):
         plt.imshow(grid, cmap='viridis')
         plt.axis('off')
         fig.canvas.draw()
-        image = np.array(fig.canvas.renderer.buffer_rgba())
         plt.close(fig)
+        image = np.array(fig.canvas.renderer.buffer_rgba())
         return image
 
 # Create and register the environment
@@ -90,10 +90,12 @@ env = WindyCliffWorld()
 
 def q_learning(env, num_episodes, alpha, gamma, epsilon):
     q_table = np.zeros([env.observation_space.n, env.action_space.n])
+    rewards = []
 
     for episode in range(num_episodes):
         state = env.reset()
         done = False
+        ep_reward = 0
 
         while not done:    
             if np.random.rand() < epsilon:
@@ -103,19 +105,25 @@ def q_learning(env, num_episodes, alpha, gamma, epsilon):
 
             next_state, reward, done, _ = env.step(action)
 
-            best_action = np.max(q_table[state])
+            best_action = np.max(q_table[next_state])
             q_table[state, action] = q_table[state, action] + alpha * (reward + gamma * best_action - q_table[state, action])
 
             state = next_state
+            ep_reward += reward
     
-    return q_table
+        rewards.append(ep_reward)
+
+    return rewards, q_table
 
 def sarsa(env, num_episodes, alpha, gamma, epsilon):
     q_table = np.zeros([env.observation_space.n, env.action_space.n])
+    rewards = []
 
     for episode in range(num_episodes):
         state = env.reset()
         done = False
+        ep_reward = 0
+
         if np.random.rand() < epsilon:
             action = env.action_space.sample()
         else:
@@ -127,14 +135,17 @@ def sarsa(env, num_episodes, alpha, gamma, epsilon):
             if np.random.rand() < epsilon:
                 next_action = env.action_space.sample()
             else:
-                next_action = int(np.argmax(q_table[state]))
+                next_action = int(np.argmax(q_table[next_state]))
 
             q_table[state, action] = q_table[state, action] + alpha*(reward + gamma*q_table[next_state, next_action] - q_table[state,action])
 
             state = next_state
             action = next_action
-    
-    return q_table
+            ep_reward += reward
+
+        rewards.append(ep_reward)
+
+    return rewards, q_table
 
 def save_gif(frames, path='./', filename='gym_animation.gif'):
     imageio.mimsave(os.path.join(path, filename), frames, duration=0.5)
@@ -154,16 +165,43 @@ def visualize_policy(env, q_table, filename='q_learning.gif'):
 # Example usage:
 # Testing Q-Learning
 env = WindyCliffWorld()
-q_table = q_learning(env, num_episodes=500, alpha=0.1, gamma=0.99, epsilon=0.1)
+_, q_table = q_learning(env, num_episodes=500, alpha=0.1, gamma=0.99, epsilon=0.1)
 visualize_policy(env, q_table, filename='q_learning_windy_cliff.gif')
 
-# Testing SARSA
-# env = WindyCliffWorld()
-# q_table = sarsa(env, num_episodes=500, alpha=0.1, gamma=0.99, epsilon=0.1)
-# visualize_policy(env, q_table, filename='sarsa_windy_cliff.gif')
+# # Testing SARSA
+env = WindyCliffWorld()
+_, q_table = sarsa(env, num_episodes=500, alpha=0.1, gamma=0.99, epsilon=0.1)
+visualize_policy(env, q_table, filename='sarsa_windy_cliff.gif')
 
-# TODO: Run experiments with different hyperparameters and visualize the results
 # You should generate two plots:
 # 1. Total reward over episodes for different α and ε values for Q-learning
+alphas = [0.1, 0.5]
+epsilons = [0.1, 0.5]
+
+plt.figure()
+for alpha in alphas:
+    for epsilon in epsilons:
+        env = WindyCliffWorld()
+        rewards, _ = q_learning(env, num_episodes=500, alpha=alpha, gamma=0.99, epsilon=epsilon)
+        label = f"Q-Learning: α={alpha}, ε={epsilon}"
+        plt.plot(rewards, label=label)
+plt.xlabel("Episode")
+plt.ylabel("Total Reward")
+plt.title("Q-Learning: Total Reward over Episodes")
+plt.legend()
+plt.savefig("q_learning_windy_cliff_hyperparameters.png")
+plt.show()
 # 2. Total reward over episodes for different α and ε values for SARSA
-# For each plot, use at least 2 different values for α and 2 different values for ε
+plt.figure()
+for alpha in alphas:
+    for epsilon in epsilons:
+        env = WindyCliffWorld()  # reset environment for each experiment run
+        rewards, _ = sarsa(env, num_episodes=500, alpha=alpha, gamma=0.99, epsilon=epsilon)
+        label = f"SARSA: α={alpha}, ε={epsilon}"
+        plt.plot(rewards, label=label)
+plt.xlabel("Episode")
+plt.ylabel("Total Reward")
+plt.title("SARSA: Total Reward over Episodes")
+plt.legend()
+plt.savefig("sarsa_windy_cliff_hyperparameters.png")
+plt.show()
